@@ -1,145 +1,156 @@
-# OMP Stats · Orca 侧边栏插件
+# OMP Stats · Orca Sidebar Plugin
 
 [![Orca Plugin](https://img.shields.io/badge/Orca%20Plugin-v0.1.0-5ad8e6.svg)](#)
 [![Execution](https://img.shields.io/badge/Execution-trusted--worker-ed4abf.svg)](#)
 [![Engines](https://img.shields.io/badge/Orca-%3E%3D1.4.248-3ecf8e.svg)](#)
+[![License](https://img.shields.io/badge/License-MIT-3ecf8e.svg)](./LICENSE)
 
-将 **omp (Open Multimodal Proxy / AI Coding Agent)** 官方遥测看板（`http://127.0.0.1:59127/`）原生内嵌至 Orca 右侧边栏。直接以只读模式并发挂载 `~/.omp/stats.db`，实现 **~9ms 极致查库**、**毫秒级秒开渲染**与 **1:1 像素级视觉对齐**。
+<p align="center">
+  <img src="./assets/cover.png" alt="OMP Stats in Orca Sidebar" width="800" />
+</p>
+
+Displays **omp** (Open Multimodal Proxy / AI Coding Agent) telemetry in the Orca sidebar with real-time usage monitoring, designed for Orca users working with omp. Directly queries `~/.omp/stats.db` in read-only mode via Node's embedded SQLite in **~9ms** with zero locks, providing 1:1 visual and data parity with omp's official web dashboard (`http://127.0.0.1:59127/`).
 
 ---
 
-## 界面概览
+## Quick Install
 
-### 顶部全局工具栏
+```sh
+orca plugin install turingfx/omp-stats
+```
 
+---
+
+## Interface Layout
+
+### Unified Top Control Bar
 ```
 ┌────────────────────────────────────────────────────────┐
-│ [ ● Live                58m ago ] [ ⟳ 刷新 ] ┌────────┐│
-│ ├──────────────────────────────────────────┤ │        ││
-│ [  1h  |  24h  |  7d  |  30d  |  90d | All ] │ │   π  ││
-│ └──────────────────────────────────────────┘ └────────┘│
+│ [ ● Live                58m ago ] [ ⟳ Refresh ] ┌──────┐│
+│ ├─────────────────────────────────────────────┤ │      ││
+│ [  1h  |  24h  |  7d  |  30d  |  90d  |  All  ] │ │ π  ││
+│ └─────────────────────────────────────────────┘ └──────┘│
 │  Overview  |  Models (7)                               │
 └────────────────────────────────────────────────────────┘
 ```
-
-- **左右完全对齐**：状态芯片、手动刷新按钮与时间范围胶囊左右边框上下像素级对齐（x = 439）。
-- **实时状态芯片**：呼吸绿点展示最后更新时间，支持点击刷新。
-- **手动刷新按钮**：带 `⟳` 顺时针旋转动画与 `刷新中…` 状态反馈。
-- **6 级时间窗**：`1h`（5 分钟桶）、`24h`（1 小时桶）、`7d`、`30d`、`90d`、`All`。
-- **omp 发光品牌图标**：从 `hero.png` 质心 1:1 提取的品红至蓝紫渐变几何 Monogram，带霓虹微光。
-
----
-
-## 核心功能与视图
-
-### 1. Overview（总览视图）
-
-对齐 `http://127.0.0.1:59127/#/overview`：
-
-- **5 张主 KPI 指标卡（带 SVG 面积折线）**：
-  - `API-equivalent cost`：公有云 API 等效成本（含品红折线与未计价请求统计）
-  - `Requests`：请求总量、失败次数（青色折线）
-  - `Conversation tokens`：对话总 Token 数、输出 Token 数（青色折线）
-  - `Cache rate`：缓存命中率与节约比例
-  - `Error rate`：错误率与成功请求数（红色折线）
-- **8 格次级指标条（2×4 紧凑网格）**：
-  `Uncached input`｜`Cache read`｜`Cache write`｜`Output`｜`Premium reqs`｜`Tokens/s`｜`Avg latency`｜`Avg TTFT`
-- **Activity 柱状图**：按时序展示请求柱状分布，支持 `Requests`（含失败红色堆叠）、`Tokens`、`Cost` 三维切换。
-- **Token mix & By agent**：四色 Token 构成比例条（未缓存入、缓存读、缓存写、模型输出），以及主/子 Agent 资源占比。
-- **Latest requests 表**：展示最近 12 次模型调用的模型、渠道、时间、耗时、Token 数、费用与 `OK` / `Failed` 状态徽章。
+- **Pixel-perfect alignment**: The status chip, manual refresh button, and range segmented controls align vertically on both left and right edges.
+- **Live status chip**: Pulsing indicator displaying relative last-synced time.
+- **Dedicated manual refresh button**: Includes a `⟳` rotating animation and real-time `Syncing…` feedback.
+- **6 Time ranges**: `1h` (5-min buckets), `24h` (1-hour buckets), `7d`, `30d`, `90d`, and `All`.
+- **Glowing brand icon**: Centered geometric omp monogram extracted from the desktop banner asset with neon ambient glow.
 
 ---
 
-### 2. Models（模型分析视图）
+## Features
 
-对齐 `http://127.0.0.1:59127/#/models`：
+### 1. Overview Tab (`#/overview`)
+Mirrors `http://127.0.0.1:59127/#/overview`:
 
-- **4 张模型核心卡片**：`Models used`（使用的模型数与服务商数）、`Most used`（调用最多模型与占比）、`Requests`（请求折线）、`API-equivalent cost`。
-- **Request share 堆叠图**：10 色调色盘，支持 **`Share`（100% 占比面积）** 与 **`Requests`（调用量柱状）** 切换，附带模型图例。
-- **All models 多维明细表（双显示模式）**：
-  - **紧凑收缩模式 (`Compact`，默认)**：专为侧边栏窄屏定制，5 列零截断无溢出：
-    - `Model`：折叠三角 `▸` + 颜色点 + 模型名称 + 服务商与请求数
-    - `Errors`：对齐网页版的**语义色状态胶囊**（`0%` 灰暗、`<1%` 绿色、`1-5%` 黄色、`>5%` 红色）
-    - `Tokens`：加粗 Token 总量 + 下方缓存率
-    - `Speed`：生成速度（`Tokens/s`）+ 下方首字延迟（`TTFT`）
-    - `Trend`：每个模型独立的迷你平滑折线图
-  - **完整宽表模式 (`Full table`)**：提供水平滚动条，1:1 还原网页版全部 10 列：
-    `Model`｜`Requests`｜`Cost`｜`Tokens`｜`Cache rate`｜`Errors`｜`Tokens/s`｜`TTFT`｜`Trend`
-- **单行点击展开性能抽屉（Dual-axis Performance Chart）**：
-  点击任意模型行即可展开：
-  - **Efficiency**：错误率、缓存率、Cache savings、Premium reqs
-  - **Latency & Throughput**：平均耗时、Avg TTFT、Tokens/s
-  - **Tokens**：输入、缓存读、缓存写、输出明细
-  - **双轴折线图**：
-    - **左轴实线**：Tokens/s 吞吐折线（模型专属主题色）
-    - **右轴虚线**：TTFT 首字延迟折线（灰色点划线）
-    - **交互浮层**：悬停任一采样点查看精确吞吐、延迟与请求数
+- **5 Primary Stat Cards (with SVG area sparklines)**:
+  - `API-equivalent cost`: Estimated cost at public API rates with sparkline and unpriced request indicators.
+  - `Requests`: Total request count and failure count with sparkline.
+  - `Conversation tokens`: Total token burn and output tokens with sparkline.
+  - `Cache rate`: Cache hit percentage and savings percentage.
+  - `Error rate`: Error percentage and successful request count with sparkline.
+- **8 Secondary Stat Cells (2×4 compact grid)**:
+  `Uncached input` | `Cache read` | `Cache write` | `Output` | `Premium reqs` | `Tokens/s` | `Avg latency` | `Avg TTFT`
+- **Activity Bar Chart**: Chronological request distribution with `Requests` (including failed request sub-bars in red), `Tokens`, and `Cost` toggle.
+- **Token Mix & By Agent Breakdown**: 4-segment stacked share bar (Uncached input, Cache read, Cache write, Output) and Main agent vs. Subagents resource distribution.
+- **Latest Requests Table**: Real-time table of the 12 most recent model calls displaying model, provider, duration, tokens, cost, and `OK` / `Failed` status badges.
 
 ---
 
-## 技术架构
+### 2. Models Tab (`#/models`)
+Mirrors `http://127.0.0.1:59127/#/models`:
+
+- **4 Top Stat Cards**: `Models used`, `Most used`, `Requests` (with trend sparkline), and `API-equivalent cost`.
+- **Request Share Stacked Bar Chart**: Model-colored stacked bar chart supporting **`Share` (100% normalized)** and **`Requests` (absolute volume)** modes, accompanied by a model palette legend.
+- **All Models Table (Dual Viewing Modes)**:
+  - **Compact Mode (`Compact`, default)**: Tailored for narrow sidebars with zero horizontal scrolling or awkward clipping:
+    - `Model`: Expand chevron `▸` + color swatch + model name + provider & request count.
+    - `Errors`: Semantically color-coded error badges matching the web dashboard (`0%` dim, `<1%` green, `1-5%` yellow, `>5%` red).
+    - `Tokens`: Total tokens + cache hit rate.
+    - `Speed`: Generation throughput (`Tokens/s`) + time to first token (`TTFT`).
+    - `Trend`: Mini SVG sparkline line chart per model.
+  - **Full Table Mode (`Full table`)**: Smooth horizontal scrolling table displaying all 10 columns from the web dashboard:
+    `Model` | `Requests` | `Cost` | `Tokens` | `Cache rate` | `Errors` | `Tokens/s` | `TTFT` | `Trend`
+- **Click-to-Expand Performance Drawer (Dual-axis Line Chart)**:
+  Clicking any model row expands an interactive detail drawer:
+  - **Efficiency**: Error rate, Cache rate, Cache savings, Premium requests.
+  - **Latency & Throughput**: Average duration, Average TTFT, Tokens/s.
+  - **Tokens**: Uncached input, Cache read, Cache write, Output.
+  - **Dual-axis Line Chart**:
+    - **Solid Line (Left Y-axis)**: Tokens/s throughput curve using the model's theme color.
+    - **Dashed Line (Right Y-axis)**: TTFT latency curve in seconds.
+    - **Interactive Tooltips**: Hover over data points to inspect exact throughput, latency, and request counts.
+
+---
+
+## Technical Architecture
 
 ```mermaid
 flowchart TD
-    A[Orca 侧边栏] -->|加载| B[Isolated Webview Frame\nsrc/panel.html + src/panel.ts]
-    B -->|localStorage| C[(本地秒开缓存)]
+    A[Orca Sidebar] -->|loads| B[Isolated Webview Frame\nsrc/panel.html + src/panel.ts]
+    B -->|localStorage snapshot| C[(Instant Startup Cache)]
     B -->|window.orca.plugin.request| D[Trusted Node Worker\nworker/main.mjs]
-    D -->|node:sqlite DatabaseSync 只读查询| E[(~/.omp/stats.db)]
-    E -.WAL 并发无锁.-> F[omp CLI / 核心引擎]
+    D -->|node:sqlite DatabaseSync readOnly| E[(~/.omp/stats.db)]
+    E -.WAL concurrency non-blocking.-> F[omp CLI / Engine]
 ```
 
-1. **安全沙箱隔离**：前端界面运行在 Electron `<webview>` 隔离环境中，通过 `window.orca` 桥接，不直接读写外部网络。
-2. **免构建热加载**：采用 TypeScript 源码分发，Orca 内置 sucrase 实时转译，无需打包器（Webpack/Vite/Rollup），改完即生效。
-3. **极速只读查库**：Worker 通过 Node 22+ 原生 `node:sqlite`（`DatabaseSync`）挂载 SQLite WAL 数据库，单次全量聚合耗时 **< 10ms**，不影响 omp 正在进行的写入。
-4. **两级韧性缓存**：`localStorage` 保证切回插件时 0 毫秒秒开历史帧；Worker 保证数据与磁盘保持秒级同步。
+1. **Sandboxed Webview**: The frontend runs in an isolated Electron `<webview>` container, communicating with the host through `window.orca` with closed network access.
+2. **Build-less Hot Reload**: Distributed as pure TypeScript and modern CSS, transpiled on the fly by Orca's built-in sucrase runtime without needing a bundler (Webpack/Vite/Rollup).
+3. **Ultra-fast SQLite Reader**: The worker mounts `~/.omp/stats.db` using Node's native `DatabaseSync` (`node:sqlite`) in **read-only mode**. Queries execute in **< 10ms** without locks or interfering with active omp sessions.
+4. **Resilient Two-tier Cache**: `localStorage` enables zero-delay cold starts, while the worker maintains real-time synchronization with disk state.
 
 ---
 
-## 目录结构
+## Project Structure
 
 ```
-plugins/omp-usage/
-├── orca-plugin.json           # 插件清单 (trusted-worker 档位，声明 panel)
-├── README.md                  # 插件说明文档
-├── tsconfig.json              # TypeScript 配置 (继承 .orca/types)
-├── .gitignore
-├── .gitattributes
+.
+├── orca-plugin.json           # Plugin manifest (declares trusted-worker and panel)
+├── README.md                  # Plugin documentation
+├── LICENSE                    # MIT license
+├── tsconfig.json              # TypeScript configuration
+├── assets/
+│   ├── icon.png               # 128x128 retina glowing monogram icon
+│   ├── cover.png              # 1600x1000 16:10 high-resolution store cover banner
+│   └── screenshot-1.png       # 1600x1000 product UI screenshot
 ├── src/
-│   ├── panel.html             # 遵循 omp stats CSS 设计系统的面板骨架
-│   ├── panel.ts               # 前端主控制器 (状态管理、路由与事件分发)
-│   ├── protocol.ts            # 面板与 Worker 之间的双向类型契约
-│   ├── format.ts              # 格式化函数 (Tokens/s, TTFT, 错误胶囊, 紧凑数值)
-│   ├── overview-cards.ts      # Topbar、KPI 指标卡与 Activity 柱状图
-│   ├── overview-sections.ts   # Token mix 分布图与 Latest requests 列表
-│   ├── models-tab.ts          # Models 子 Tab 页面骨架与 Request share 堆叠图
-│   ├── models-table.ts        # All models 表格 (Compact 紧凑与 Full table 宽表模式)
-│   ├── models-detail.ts       # 模型展开抽屉与双轴 TTFT/吞吐折线图
+│   ├── panel.html             # Panel HTML shell with native omp stats CSS tokens
+│   ├── panel.ts               # Main frontend controller and event listeners
+│   ├── protocol.ts            # Type-safe request/response protocol contract
+│   ├── format.ts              # Metric formatting utilities (Tokens/s, TTFT, badges)
+│   ├── overview-cards.ts      # Topbar, KPI grid, and Activity chart
+│   ├── overview-sections.ts   # Token mix and Latest requests table
+│   ├── models-tab.ts          # Models sub-tab layout and Request share chart
+│   ├── models-table.ts        # All models table (Compact & Full table modes)
+│   ├── models-detail.ts       # Expandable performance drawer and dual-axis chart
 │   └── assets/
-│       └── omp-logo.png       # 1:1 提取的 128x128 Retina 几何品牌图标
+│       └── omp-logo.png       # Centered 128x128 brand logo asset
 └── worker/
-    ├── main.mjs               # Worker 启动入口 (激活 RPC 监听)
-    └── omp-stats-db.mjs       # 基于 node:sqlite 对接 ~/.omp/stats.db 的 SQL 引擎
+    ├── main.mjs               # Worker entry point
+    └── omp-stats-db.mjs       # DatabaseSync query engine for ~/.omp/stats.db
 ```
 
 ---
 
-## 本地开发与调试
+## Local Development & Verification
 
 ```sh
-# 1. 进入插件目录并载入 Orca 本地开发环境
-cd plugins/omp-usage
+# 1. Load the folder into Orca development environment
 orca plugin dev watch .
 
-# 2. 类型检查 (需已生成 .orca/types)
+# 2. Type-check TypeScript files
 npx tsc -p .
 
-# 3. 代码质量与格式化检查
+# 3. Lint and code format checks
 pnpm exec oxlint src worker
 pnpm exec oxfmt --check src worker
 
-# 4. 验证清单与文件完整性
-pnpm validate:plugin plugins/omp-usage
+# 4. Validate manifest and image integrity
+pnpm validate:plugin .
 
-# 5. 无头截图测试 (验证渲染结果)
+# 5. Headless screenshot verification
 orca plugin shot local.omp-usage
 ```
