@@ -3,7 +3,7 @@
   "execution": "trusted-worker",
   "id": "omp-usage",
   "name": "omp stats",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "MIT",
   "repository": "https://github.com/turingfx/omp-stats",
   "description": "Native Orca sidebar embedding of omp's official telemetry dashboard (http://127.0.0.1:59127). Directly queries ~/.omp/stats.db in read-only mode via an embedded Node SQLite worker (~9ms) to display live KPI sparklines, latency, throughput, token mix, and per-model performance tables.",
