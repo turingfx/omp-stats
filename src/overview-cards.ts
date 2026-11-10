@@ -81,22 +81,47 @@ export function renderTopHeader(
   range: UsageRange,
   tab: SubTab,
   report: OverviewReport | null,
-  loading: boolean
+  loading: boolean,
+  autoRefreshMin: number | null,
+  autoMenuOpen: boolean
 ): string {
   const liveAgo = report ? fmtAgo(report.generatedAt) : 'syncing…'
   const modelCount = report?.byModel.length ?? 0
+  const autoOptions: { value: number | null; label: string }[] = [
+    { value: null, label: 'Off' },
+    { value: 1, label: '1m' },
+    { value: 5, label: '5m' },
+    { value: 10, label: '10m' },
+    { value: 30, label: '30m' }
+  ]
 
   return `
     <div class="topbar-row">
       <div class="topbar-controls">
         <div class="status-group">
-          <span class="live-chip">
+          <span class="live-chip" title="数据更新于 ${esc(liveAgo)}">
             <span class="row" style="gap: 5px">
               <span class="dot" data-tone="live" data-pulse="true"></span>
               <span>Live</span>
             </span>
-            <span class="live-chip-count">${esc(liveAgo)}</span>
           </span>
+          <div class="auto-refresh-wrap">
+            <button class="auto-btn" data-on="${autoRefreshMin !== null}" data-action="auto-refresh" title="自动刷新间隔" aria-haspopup="menu" aria-expanded="${autoMenuOpen}">
+              <span class="auto-btn-label">Auto</span>
+              <span class="auto-btn-value">${autoRefreshMin === null ? 'Off' : `${autoRefreshMin}m`}</span>
+              <span class="auto-caret">▾</span>
+            </button>
+            ${autoMenuOpen
+              ? `<div class="auto-menu" role="menu">
+                  ${autoOptions
+                    .map(
+                      (o) =>
+                        `<button class="auto-menu-option" role="menuitemradio" aria-checked="${autoRefreshMin === o.value}" data-auto-min="${o.value ?? 'off'}">${o.label}</button>`
+                    )
+                    .join('')}
+                </div>`
+              : ''}
+          </div>
           <button class="refresh-btn" data-action="refresh" title="点击立即刷新数据" ${loading ? 'disabled' : ''}>
             <span class="refresh-icon ${loading ? 'spin' : ''}">⟳</span>
             <span>${loading ? '刷新中…' : '刷新'}</span>

@@ -21,6 +21,8 @@ type UiState = {
   loading: boolean
   error: string | null
   report: OverviewReport | null
+  autoRefreshMin: number | null
+  autoMenuOpen: boolean
 }
 
 const STORAGE_KEY = 'omp-stats-overview.v3'
@@ -29,38 +31,50 @@ function loadCached(): {
   range: UsageRange
   tab: SubTab
   modelsMode: ModelsTableMode
+  autoRefreshMin: number | null
   report: OverviewReport | null
 } {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) {
-      return { range: '24h', tab: 'models', modelsMode: 'compact', report: null }
+      return { range: '24h', tab: 'models', modelsMode: 'compact', autoRefreshMin: null, report: null }
     }
     const parsed = JSON.parse(raw) as {
       range?: UsageRange
       tab?: SubTab
       modelsMode?: ModelsTableMode
+      autoRefreshMin?: number | null
       report?: OverviewReport
     }
+    const auto =
+      parsed.autoRefreshMin === 1 || parsed.autoRefreshMin === 5 ||
+      parsed.autoRefreshMin === 10 || parsed.autoRefreshMin === 30
+        ? parsed.autoRefreshMin
+        : null
     return {
       range: parsed.range ?? '24h',
       tab: parsed.tab ?? 'models',
       modelsMode: parsed.modelsMode ?? 'compact',
+      autoRefreshMin: auto,
       report: parsed.report ?? null
     }
   } catch {
-    return { range: '24h', tab: 'models', modelsMode: 'compact', report: null }
+    return { range: '24h', tab: 'models', modelsMode: 'compact', autoRefreshMin: null, report: null }
   }
 }
 
-function saveCached(
-  range: UsageRange,
-  tab: SubTab,
-  modelsMode: ModelsTableMode,
-  report: OverviewReport | null
-): void {
+function saveCached(): void {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ range, tab, modelsMode, report }))
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        range: state.range,
+        tab: state.tab,
+        modelsMode: state.modelsMode,
+        autoRefreshMin: state.autoRefreshMin,
+        report: state.report
+      })
+    )
   } catch {
     // Ignore storage quota errors.
   }
@@ -77,7 +91,9 @@ const state: UiState = {
   expandedModelKey: null,
   loading: false,
   error: null,
-  report: cached.report
+  report: cached.report,
+  autoRefreshMin: cached.autoRefreshMin,
+  autoMenuOpen: false
 }
 
 function render(): void {
@@ -87,7 +103,7 @@ function render(): void {
   }
   const { range, tab, metric, shareMode, modelsMode, expandedModelKey, report, loading, error } =
     state
-  let html = renderTopHeader(range, tab, report, loading)
+  let html = renderTopHeader(range, tab, report, loading, state.autoRefreshMin, state.autoMenuOpen)
 
   if (error) {
     html += `<div class="card"><div class="empty">${esc(error)}</div></div>`
@@ -131,7 +147,7 @@ async function fetchOverview(nextRange?: UsageRange): Promise<void> {
       { timeoutMs: 30_000 }
     )
     state.report = answer
-    saveCached(targetRange, state.tab, state.modelsMode, answer)
+    saveCached()
   } catch (cause) {
     state.error = cause instanceof Error ? cause.message : String(cause)
   } finally {
@@ -140,9 +156,29 @@ async function fetchOverview(nextRange?: UsageRange): Promise<void> {
   }
 }
 
+let autoTimer: number | null = null
+
+function applyAutoRefresh(): void {
+  if (autoTimer !== null) {
+    clearInterval(autoTimer)
+    autoTimer = null
+  }
+  if (state.autoRefreshMin !== null) {
+    autoTimer = setInterval(() => {
+      void fetchOverview()
+    }, state.autoRefreshMin * 60_000)
+  }
+}
+
 document.addEventListener('click', (event) => {
+  const el = event.target as HTMLElement | null
+  const inAuto = el?.closest?.('.auto-refresh-wrap') ?? null
+  if (state.autoMenuOpen && !inAuto) {
+    state.autoMenuOpen = false
+    render()
+  }
   const target = (event.target as HTMLElement | null)?.closest<HTMLElement>(
-    '[data-action],[data-range],[data-tab],[data-metric],[data-share-mode],[data-models-mode],[data-model-row]'
+    '[data-action],[data-range],[data-tab],[data-metric],[data-share-mode],[data-models-mode],[data-model-row],[data-auto-min]'
   )
   if (!target) {
     return
@@ -151,13 +187,29 @@ document.addEventListener('click', (event) => {
     void fetchOverview()
     return
   }
+  if (target.dataset.action === 'auto-refresh') {
+    state.autoMenuOpen = !state.autoMenuOpen
+    render()
+    return
+  }
+  if (target.dataset.autoMin !== undefined) {
+    const raw = target.dataset.autoMin
+    const parsed = raw === 'off' ? null : Number.parseInt(raw, 10)
+    state.autoRefreshMin =
+      parsed === 1 || parsed === 5 || parsed === 10 || parsed === 30 ? parsed : null
+    state.autoMenuOpen = false
+    applyAutoRefresh()
+    saveCached()
+    render()
+    return
+  }
   if (target.dataset.range) {
     void fetchOverview(target.dataset.range as UsageRange)
     return
   }
   if (target.dataset.tab) {
     state.tab = target.dataset.tab as SubTab
-    saveCached(state.range, state.tab, state.modelsMode, state.report)
+    saveCached()
     render()
     return
   }
@@ -171,7 +223,7 @@ document.addEventListener('click', (event) => {
   }
   if (target.dataset.modelsMode) {
     state.modelsMode = target.dataset.modelsMode as ModelsTableMode
-    saveCached(state.range, state.tab, state.modelsMode, state.report)
+    saveCached()
     render()
   }
   if (target.dataset.modelRow) {
@@ -187,3 +239,5 @@ orca.on('theme', () => {
 
 render()
 void fetchOverview()
+
+applyAutoRefresh()
