@@ -13,16 +13,16 @@ import { esc } from './overview-cards'
 import type { ModelSeriesPoint, ModelStatsRow, OverviewReport } from './protocol'
 
 const MODEL_PALETTE = [
-  '#5ad8e6',
-  '#ed4abf',
-  '#9d7bff',
-  '#f5b54a',
-  '#4ade80',
-  '#5b8cff',
-  '#ff7a59',
-  '#2dd4bf',
-  '#c3e94f',
-  '#fb7185'
+  'var(--palette-0)',
+  'var(--palette-1)',
+  'var(--palette-2)',
+  'var(--palette-3)',
+  'var(--palette-4)',
+  'var(--palette-5)',
+  'var(--palette-6)',
+  'var(--palette-7)',
+  'var(--palette-8)',
+  'var(--palette-9)'
 ]
 
 export function modelKey(m: { model: string; provider: string }): string {
@@ -35,7 +35,7 @@ export function buildModelSwatches(models: ModelStatsRow[]): Map<string, string>
   )
   const map = new Map<string, string>()
   sorted.forEach((m, idx) => {
-    map.set(modelKey(m), MODEL_PALETTE[idx % MODEL_PALETTE.length] ?? '#5ad8e6')
+    map.set(modelKey(m), MODEL_PALETTE[idx % MODEL_PALETTE.length] ?? 'var(--palette-0)')
   })
   return map
 }
@@ -103,7 +103,7 @@ function renderPerformanceLineChart(
       <g>
         <title>${esc(tip)}</title>
         <circle cx="${x.toFixed(1)}" cy="${yTps.toFixed(1)}" r="4" fill="${color}" />
-        <circle cx="${x.toFixed(1)}" cy="${yTtft.toFixed(1)}" r="3" fill="#9a9a95" />
+        <circle cx="${x.toFixed(1)}" cy="${yTtft.toFixed(1)}" r="3" fill="var(--chart-ttft)" />
       </g>
     `
   } else {
@@ -122,7 +122,7 @@ function renderPerformanceLineChart(
         <g>
           <title>${esc(tip)}</title>
           <circle cx="${x.toFixed(1)}" cy="${yTps.toFixed(1)}" r="2.8" fill="${color}" />
-          <circle cx="${x.toFixed(1)}" cy="${yTtft.toFixed(1)}" r="2.2" fill="#9a9a95" />
+          <circle cx="${x.toFixed(1)}" cy="${yTtft.toFixed(1)}" r="2.2" fill="var(--chart-ttft)" />
         </g>
       `
     })
@@ -150,7 +150,7 @@ function renderPerformanceLineChart(
             <span>Tokens/s</span>
           </span>
           <span class="row" style="gap: 5px">
-            <span class="swatch" style="background:#9a9a95"></span>
+            <span class="swatch" style="background:var(--chart-ttft)"></span>
             <span>TTFT</span>
           </span>
         </div>
@@ -161,7 +161,7 @@ function renderPerformanceLineChart(
           n > 1
             ? `
           <path d="${pathTps.trim()}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-          <path d="${pathTtft.trim()}" fill="none" stroke="#9a9a95" stroke-width="1.6" stroke-dasharray="3 3" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="${pathTtft.trim()}" fill="none" stroke="var(--chart-ttft)" stroke-width="1.6" stroke-dasharray="3 3" stroke-linecap="round" stroke-linejoin="round" />
         `
             : ''
         }

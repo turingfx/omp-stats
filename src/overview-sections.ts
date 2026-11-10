@@ -4,9 +4,9 @@ import { esc } from './overview-cards'
 import type { AgentTypeRow, OverviewReport } from './protocol'
 
 const MIX_SPEC = [
-  { key: 'input' as const, label: 'Uncached input', color: '#5b8cff' },
+  { key: 'input' as const, label: 'Uncached input', color: 'var(--palette-5)' },
   { key: 'cacheRead' as const, label: 'Cache read', color: 'var(--chart-primary)' },
-  { key: 'cacheWrite' as const, label: 'Cache write', color: '#f5b54a' },
+  { key: 'cacheWrite' as const, label: 'Cache write', color: 'var(--palette-3)' },
   { key: 'output' as const, label: 'Output', color: 'var(--chart-secondary)' }
 ]
 
@@ -19,7 +19,7 @@ const AGENT_LABELS: Record<string, string> = {
 const AGENT_COLORS: Record<string, string> = {
   main: 'var(--chart-primary)',
   subagent: 'var(--chart-secondary)',
-  advisor: '#9d7bff'
+  advisor: 'var(--palette-2)'
 }
 
 export function renderTokenMixCard(report: OverviewReport): string {

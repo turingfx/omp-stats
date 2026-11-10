@@ -115,7 +115,7 @@ export function renderModelsTab(
           const frac = shareMode === 'share' ? count / total : count / maxBucketReq
           const h = Math.max(1.5, frac * plotH)
           yCursor -= h
-          const color = swatches.get(k) ?? '#5ad8e6'
+          const color = swatches.get(k) ?? 'var(--palette-0)'
           return `<rect x="${x.toFixed(1)}" y="${Math.max(padT, yCursor).toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" fill="${color}"><title>${esc(`${fmtBucketTick(ts, report.bucketMs)} · ${m.model}: ${count} req (${fmtPct(count / total)})`)}</title></rect>`
         })
         .join('')
@@ -188,7 +188,7 @@ export function renderModelsTab(
               .slice(0, 8)
               .map((m) => {
                 const k = modelKey(m)
-                const color = swatches.get(k) ?? '#5ad8e6'
+                const color = swatches.get(k) ?? 'var(--palette-0)'
                 return `
                   <span class="legend-item">
                     <span class="swatch" style="background:${color}"></span>

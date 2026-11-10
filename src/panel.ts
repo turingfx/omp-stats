@@ -233,10 +233,20 @@ document.addEventListener('click', (event) => {
   }
 })
 
-orca.on('theme', () => {
+function syncTheme(scheme?: 'light' | 'dark'): void {
+  const resolved =
+    scheme ?? (document.documentElement.classList.contains('light') ? 'light' : 'dark')
+  document.documentElement.dataset.theme = resolved
+  document.documentElement.classList.toggle('light', resolved === 'light')
+  document.documentElement.classList.toggle('dark', resolved === 'dark')
+}
+
+syncTheme()
+
+orca.on('theme', (theme) => {
+  syncTheme(theme?.colorScheme)
   render()
 })
-
 render()
 void fetchOverview()
 

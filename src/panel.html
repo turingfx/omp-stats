@@ -1,18 +1,23 @@
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>omp stats</title>
     <style>
       :root,
+      html.dark,
       [data-theme='dark'] {
         color-scheme: dark;
         --bg: #000000;
         --panel: #09090a;
         --card: #0e0e10;
         --raised: #17171a;
+        --seg-track: #0e0e10;
+        --seg-active: #17171a;
+        --menu-bg: #0e0e10;
         --hover: rgba(255, 255, 255, 0.035);
+        --detail-bg: rgba(255, 255, 255, 0.02);
         --line-1: rgba(255, 255, 255, 0.06);
         --line-2: rgba(255, 255, 255, 0.09);
         --line-3: rgba(255, 255, 255, 0.14);
@@ -25,17 +30,84 @@
         --ok-soft: rgba(62, 207, 142, 0.13);
         --bad: #ff6166;
         --bad-soft: rgba(255, 97, 102, 0.13);
+        --warn: #f5a524;
+        --warn-soft: rgba(245, 165, 36, 0.16);
         --live: #3ecf8e;
         --chart-grid: rgba(255, 255, 255, 0.055);
         --chart-axis: #5c5c64;
         --chart-primary: #5ad8e6;
         --chart-secondary: #ed4abf;
+        --chart-ttft: #9a9a95;
         --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.45);
+        --shadow-control: 0 1px 2px rgba(0, 0, 0, 0.4);
+        --shadow-menu: 0 8px 24px rgba(0, 0, 0, 0.45);
+        --icon-bg: #120a14;
+        --icon-shadow: 0 4px 16px rgba(237, 74, 191, 0.22);
+        --icon-shadow-hover: 0 6px 20px rgba(237, 74, 191, 0.35);
+        --palette-0: #5ad8e6;
+        --palette-1: #ed4abf;
+        --palette-2: #9d7bff;
+        --palette-3: #f5b54a;
+        --palette-4: #4ade80;
+        --palette-5: #5b8cff;
+        --palette-6: #ff7a59;
+        --palette-7: #2dd4bf;
+        --palette-8: #c3e94f;
+        --palette-9: #fb7185;
         --font-sans: 'Inter var', 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
         --font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, monospace;
         --r-control: 8px;
         --r-card: 12px;
         --r-pill: 999px;
+      }
+
+      html.light,
+      [data-theme='light'] {
+        color-scheme: light;
+        --bg: var(--orca-background, #f3f4f6);
+        --panel: var(--orca-background, #f5f6f8);
+        --card: var(--orca-card, #ffffff);
+        --raised: var(--orca-muted, #eef0f4);
+        --seg-track: color-mix(in srgb, var(--ink-1) 6%, var(--panel));
+        --seg-active: var(--card);
+        --menu-bg: var(--orca-popover, #ffffff);
+        --hover: rgba(15, 23, 42, 0.04);
+        --detail-bg: rgba(15, 23, 42, 0.025);
+        --line-1: rgba(15, 23, 42, 0.08);
+        --line-2: var(--orca-border, rgba(15, 23, 42, 0.13));
+        --line-3: rgba(15, 23, 42, 0.2);
+        --ink-1: var(--orca-foreground, #111827);
+        --ink-2: var(--orca-muted-foreground, #4b5563);
+        --ink-3: color-mix(in srgb, var(--ink-1) 58%, var(--panel));
+        --accent-a: #0891b2;
+        --accent-b: #db2777;
+        --ok: #059669;
+        --ok-soft: rgba(5, 150, 105, 0.12);
+        --bad: #dc2626;
+        --bad-soft: rgba(220, 38, 38, 0.11);
+        --warn: #b45309;
+        --warn-soft: rgba(217, 119, 6, 0.13);
+        --live: #10b981;
+        --chart-grid: rgba(15, 23, 42, 0.075);
+        --chart-axis: color-mix(in srgb, var(--ink-1) 58%, var(--panel));
+        --chart-secondary: #db2777;
+        --chart-ttft: #64748b;
+        --shadow-1: 0 1px 2px rgba(15, 23, 42, 0.06);
+        --shadow-control: 0 1px 2px rgba(15, 23, 42, 0.08);
+        --shadow-menu: 0 8px 24px rgba(15, 23, 42, 0.12);
+        --icon-bg: #180c1c;
+        --icon-shadow: 0 3px 10px rgba(219, 39, 119, 0.18);
+        --icon-shadow-hover: 0 5px 14px rgba(219, 39, 119, 0.28);
+        --palette-0: #0891b2;
+        --palette-1: #db2777;
+        --palette-2: #7c3aed;
+        --palette-3: #d97706;
+        --palette-4: #16a34a;
+        --palette-5: #2563eb;
+        --palette-6: #ea580c;
+        --palette-7: #0d9488;
+        --palette-8: #65a30d;
+        --palette-9: #e11d48;
       }
 
       *,
@@ -246,8 +318,8 @@
         gap: 1px;
         border-radius: 10px;
         border: 1px solid var(--line-2);
-        background: var(--card);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+        background: var(--menu-bg);
+        box-shadow: var(--shadow-menu);
       }
 
       .auto-menu-option {
@@ -298,8 +370,8 @@
         height: 58px;
         border-radius: 14px;
         border: 1px solid var(--line-2);
-        background: #120a14;
-        box-shadow: 0 4px 16px rgba(237, 74, 191, 0.22);
+        background: var(--icon-bg);
+        box-shadow: var(--icon-shadow);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -312,7 +384,7 @@
 
       .topbar-icon-card:hover {
         transform: scale(1.04);
-        box-shadow: 0 6px 20px rgba(237, 74, 191, 0.35);
+        box-shadow: var(--icon-shadow-hover);
       }
 
       .topbar-icon {
@@ -363,7 +435,7 @@
         display: inline-flex;
         align-items: center;
         border-radius: var(--r-control);
-        background: var(--card);
+        background: var(--seg-track);
         border: 1px solid var(--line-2);
         padding: 2px;
         gap: 1px;
@@ -399,9 +471,9 @@
 
       .segmented-option[data-active='true'] {
         color: var(--ink-1);
-        background: var(--raised);
+        background: var(--seg-active);
         border: 1px solid var(--line-3);
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+        box-shadow: var(--shadow-control);
       }
 
       /* Page header */
@@ -725,8 +797,8 @@
       }
 
       .badge[data-tone='warn'] {
-        background: rgba(245, 165, 36, 0.16);
-        color: #f5a524;
+        background: var(--warn-soft);
+        color: var(--warn);
       }
 
       .table-wrap {
@@ -818,7 +890,7 @@
       }
 
       .detail-row td {
-        background: rgba(255, 255, 255, 0.02);
+        background: var(--detail-bg);
         padding: 8px 10px 10px !important;
       }
 

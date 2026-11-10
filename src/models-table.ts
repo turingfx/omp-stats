@@ -17,7 +17,7 @@ function renderCompactRows(
   return models
     .map((m, idx) => {
       const k = modelKey(m)
-      const color = swatches.get(k) ?? '#5ad8e6'
+      const color = swatches.get(k) ?? 'var(--palette-0)'
       const isOpen = expandedModelKey === k
       const conv =
         m.totalInputTokens + m.totalOutputTokens + m.totalCacheReadTokens + m.totalCacheWriteTokens
@@ -74,7 +74,7 @@ function renderFullRows(
   return models
     .map((m, idx) => {
       const k = modelKey(m)
-      const color = swatches.get(k) ?? '#5ad8e6'
+      const color = swatches.get(k) ?? 'var(--palette-0)'
       const isOpen = expandedModelKey === k
       const conv =
         m.totalInputTokens + m.totalOutputTokens + m.totalCacheReadTokens + m.totalCacheWriteTokens
