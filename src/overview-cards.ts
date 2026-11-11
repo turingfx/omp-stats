@@ -141,6 +141,7 @@ export function renderTopHeader(
         <span>Models</span>
         ${modelCount > 0 ? `<span class="tab-badge num">${modelCount}</span>` : ''}
       </button>
+      <button class="tab" data-active="${tab === 'model-trend'}" data-tab="model-trend">Trends</button>
     </nav>
   `
 }

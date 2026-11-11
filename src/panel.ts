@@ -1,4 +1,5 @@
 // Controller for the OMP Stats sidebar panel (Overview + Models sub-tabs).
+import { renderModelTrendTab, type TrendSelection } from './model-trend'
 import { renderModelsTab } from './models-tab'
 import { esc, renderActivityCard, renderStatGrids, renderTopHeader } from './overview-cards'
 import { renderLatestRequestsCard, renderTokenMixCard } from './overview-sections'
@@ -23,6 +24,8 @@ type UiState = {
   report: OverviewReport | null
   autoRefreshMin: number | null
   autoMenuOpen: boolean
+  trendSelection: TrendSelection | null
+  trendFocus: string | null
 }
 
 const STORAGE_KEY = 'omp-stats-overview.v3'
@@ -93,7 +96,9 @@ const state: UiState = {
   error: null,
   report: cached.report,
   autoRefreshMin: cached.autoRefreshMin,
-  autoMenuOpen: false
+  autoMenuOpen: false,
+  trendSelection: null,
+  trendFocus: null
 }
 
 function render(): void {
@@ -111,6 +116,8 @@ function render(): void {
 
   if (!report) {
     html += `<div class="card"><div class="empty">${loading ? 'Loading stats…' : 'No data available'}</div></div>`
+  } else if (tab === 'model-trend') {
+    html += renderModelTrendTab(report, state.trendSelection, state.trendFocus)
   } else if (tab === 'models') {
     html += renderModelsTab(report, shareMode, modelsMode, expandedModelKey)
   } else {
@@ -177,10 +184,42 @@ document.addEventListener('click', (event) => {
     state.autoMenuOpen = false
     render()
   }
+  const chart = el?.closest?.<SVGSVGElement>('svg[data-trend-metric]') ?? null
+  if (chart && chart.isConnected && state.report) {
+    const box = chart.getBoundingClientRect()
+    const vbX = ((event.clientX - box.left) / box.width) * Number(chart.dataset.vbW)
+    const n = Number(chart.dataset.n)
+    const idx = Math.min(
+      n - 1,
+      Math.max(0, Math.floor((vbX - Number(chart.dataset.padL)) / (Number(chart.dataset.plotW) / n)))
+    )
+    const ts = state.report.buckets[idx]
+    const metric = chart.dataset.trendMetric ?? ''
+    const model = el?.closest?.<SVGElement>('[data-trend-model]')?.dataset.trendModel ?? null
+    if (ts !== undefined) {
+      const same = state.trendSelection?.ts === ts && state.trendSelection.metric === metric
+      state.trendSelection = same && !model ? null : { ts, metric }
+    }
+    if (model) {
+      state.trendFocus = model
+    }
+    render()
+    return
+  }
   const target = (event.target as HTMLElement | null)?.closest<HTMLElement>(
-    '[data-action],[data-range],[data-tab],[data-metric],[data-share-mode],[data-models-mode],[data-model-row],[data-auto-min]'
+    '[data-action],[data-range],[data-tab],[data-metric],[data-share-mode],[data-models-mode],[data-model-row],[data-auto-min],[data-trend-legend],[data-trend-clear]'
   )
   if (!target) {
+    return
+  }
+  if (target.dataset.trendLegend) {
+    state.trendFocus = state.trendFocus === target.dataset.trendLegend ? null : target.dataset.trendLegend
+    render()
+    return
+  }
+  if (target.dataset.trendClear) {
+    state.trendSelection = null
+    render()
     return
   }
   if (target.dataset.action === 'refresh') {

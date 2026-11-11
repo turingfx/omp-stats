@@ -2,7 +2,7 @@
 // Mirrors http://127.0.0.1:59127/#/overview?range=24h and #/models?range=24h.
 
 export type UsageRange = '1h' | '24h' | '7d' | '30d' | '90d' | 'all'
-export type SubTab = 'overview' | 'models'
+export type SubTab = 'overview' | 'models' | 'model-trend'
 export type ActivityMetric = 'requests' | 'tokens' | 'cost'
 export type ShareChartMode = 'share' | 'requests'
 export type ModelsTableMode = 'compact' | 'full'
@@ -38,6 +38,9 @@ export type ModelSeriesPoint = {
   model: string
   provider: string
   requests: number
+  errors: number
+  tokens: number
+  cost: number
   avgTtft: number | null
   avgTokensPerSecond: number | null
 }

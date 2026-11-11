@@ -30,14 +30,14 @@ orca plugin install turingfx/omp-stats
 │ ├─────────────────────────────────────┤ │      │           │
 │ [  1h  |  24h  |  7d  |  30d  |  90d  |  All  ] │ π  │     │
 │ └─────────────────────────────────────┘ └──────┘           │
-│  Overview  |  Models (7)                                     │
-└──────────────────────────────────────────────────────────────┘
+│  Overview  |  Models (7)  |  Trends                              │
 ```
 - **Pixel-perfect alignment**: The status chip, auto/manual refresh buttons, and range segmented controls align vertically on both left and right edges.
 - **Live status chip**: Pulsing indicator; hover shows the relative last-synced time.
 - **Auto refresh selector**: `Off` / `1m` / `5m` / `10m` / `30m` interval dropdown; the chosen interval persists across reloads and re-arms on startup.
 - **Dedicated manual refresh button**: Includes a `⟳` rotating animation and real-time `Syncing…` feedback.
 - **6 Time ranges**: `1h` (5-min buckets), `24h` (1-hour buckets), `7d`, `30d`, `90d`, and `All`.
+- **Trends tab**: one multi-model chart per metric — Usage, Usage share (100% stacked area), Speed (tokens/s), TTFT, Error rate, Tokens, Cost — with per-model palette lines, hover tooltips, and a legend showing each model's latest value.
 - **Glowing brand icon**: Centered geometric omp monogram extracted from the desktop banner asset with neon ambient glow.
 
 ---

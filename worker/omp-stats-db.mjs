@@ -197,6 +197,9 @@ export function queryOverviewReport({ range = '24h', dbPath } = {}) {
           model,
           provider,
           COUNT(*) AS requests,
+          SUM(CASE WHEN stop_reason = 'error' THEN 1 ELSE 0 END) AS errors,
+          COALESCE(SUM(total_tokens), 0) AS tokens,
+          TOTAL(cost_total) AS cost,
           TOTAL(ttft) / NULLIF(COUNT(ttft), 0) AS avg_ttft,
           TOTAL(CASE WHEN duration > 0 THEN output_tokens * 1000.0 / duration END) / NULLIF(COUNT(CASE WHEN duration > 0 THEN 1 END), 0) AS avg_tps
         FROM messages
@@ -275,6 +278,9 @@ export function queryOverviewReport({ range = '24h', dbPath } = {}) {
         model: String(r.model ?? '—'),
         provider: String(r.provider ?? '—'),
         requests: Number(r.requests ?? 0),
+        errors: Number(r.errors ?? 0),
+        tokens: Number(r.tokens ?? 0),
+        cost: Number(r.cost ?? 0),
         avgTtft: r.avg_ttft === null ? null : Number(r.avg_ttft),
         avgTokensPerSecond: r.avg_tps === null ? null : Number(r.avg_tps)
       })),
