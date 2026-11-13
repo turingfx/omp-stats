@@ -1,5 +1,5 @@
-// Renders the Token mix & By agent breakdown card and the Latest requests table card.
-import { fmtAgo, fmtCompact, fmtCost, fmtInt, fmtLatency, fmtPct } from './format'
+// Renders the Token mix & By agent breakdown card.
+import { fmtCompact, fmtInt, fmtPct } from './format'
 import { esc } from './overview-cards'
 import type { AgentTypeRow, OverviewReport } from './protocol'
 
@@ -120,79 +120,6 @@ export function renderTokenMixCard(report: OverviewReport): string {
               .join('')}
           </div>
         </div>
-      </div>
-    </section>
-  `
-}
-
-export function renderLatestRequestsCard(report: OverviewReport): string {
-  const rows = report.recentRequests
-
-  return `
-    <section class="card">
-      <div class="card-header">
-        <div class="card-titles">
-          <h2 class="card-title">
-            <span class="dot" data-tone="live" data-pulse="true"></span>
-            <span>Latest requests</span>
-          </h2>
-          <p class="card-description">Most recent model calls across every session</p>
-        </div>
-      </div>
-      <div class="card-body" data-flush="true">
-        ${
-          rows.length === 0
-            ? `<div class="empty">No requests recorded yet.</div>`
-            : `
-          <table class="table">
-            <colgroup>
-              <col style="width: 39%" />
-              <col style="width: 21%" />
-              <col style="width: 23%" />
-              <col style="width: 17%" />
-            </colgroup>
-            <thead>
-              <tr>
-                <th>Model</th>
-                <th>When</th>
-                <th class="right">Tokens / Cost</th>
-                <th class="right">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${rows
-                .map((r) => {
-                  const unpriced =
-                    r.totalTokens > 0 &&
-                    r.costTotal === 0 &&
-                    (r.provider === 'xai-oauth' || r.costUnpriced)
-                  const costStr = fmtCost(r.costTotal, unpriced ? 1 : 0, 4)
-                  const failed = Boolean(r.errorMessage) || r.stopReason === 'error'
-                  return `
-                    <tr>
-                      <td title="${esc(`${r.provider}/${r.model}`)}">
-                        <div class="mono cell-primary">${esc(r.model)}</div>
-                        <div class="cell-secondary">${esc(r.provider)}</div>
-                      </td>
-                      <td>
-                        <div class="muted" style="font-size: 11px">${esc(fmtAgo(r.timestamp))}</div>
-                        <div class="cell-secondary num">${esc(fmtLatency(r.duration))}</div>
-                      </td>
-                      <td class="right">
-                        <div class="num cell-primary">${fmtInt(r.totalTokens)}</div>
-                        <div class="cell-secondary num">${esc(costStr)}</div>
-                      </td>
-                      <td class="right">
-                        <span class="badge" data-tone="${failed ? 'bad' : 'ok'}">${failed ? 'Failed' : 'OK'}</span>
-                      </td>
-                    </tr>
-                  `
-                })
-                .join('')}
-            </tbody>
-          </table>
-        `
-        }
       </div>
     </section>
   `

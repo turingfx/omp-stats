@@ -2,7 +2,7 @@
 import { renderModelTrendTab, type TrendSelection } from './model-trend'
 import { renderModelsTab } from './models-tab'
 import { esc, renderActivityCard, renderStatGrids, renderTopHeader } from './overview-cards'
-import { renderLatestRequestsCard, renderTokenMixCard } from './overview-sections'
+import { renderTokenMixCard } from './overview-sections'
 import type {
   ActivityMetric,
   ModelsTableMode,
@@ -124,7 +124,6 @@ function render(): void {
     html += renderStatGrids(report)
     html += renderActivityCard(report, metric)
     html += renderTokenMixCard(report)
-    html += renderLatestRequestsCard(report)
   }
 
   root.innerHTML = html
