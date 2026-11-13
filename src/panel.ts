@@ -135,7 +135,7 @@ function render(): void {
   }
 }
 
-async function fetchOverview(nextRange?: UsageRange): Promise<void> {
+async function fetchOverview(nextRange?: UsageRange, options?: { forceSync?: boolean }): Promise<void> {
   if (state.loading) {
     return
   }
@@ -148,9 +148,13 @@ async function fetchOverview(nextRange?: UsageRange): Promise<void> {
   render()
 
   try {
+    const payload: { range: UsageRange; forceSync?: boolean } = { range: targetRange }
+    if (options?.forceSync) {
+      payload.forceSync = true
+    }
     const answer = await orca.plugin.request(
       'usage.overview',
-      { range: targetRange },
+      payload,
       { timeoutMs: 30_000 }
     )
     state.report = answer
@@ -223,7 +227,7 @@ document.addEventListener('click', (event) => {
     return
   }
   if (target.dataset.action === 'refresh') {
-    void fetchOverview()
+    void fetchOverview(undefined, { forceSync: true })
     return
   }
   if (target.dataset.action === 'auto-refresh') {

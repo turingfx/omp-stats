@@ -93,6 +93,6 @@ export type OverviewReport = {
 declare module 'orca' {
   // oxlint-disable-next-line typescript/consistent-type-definitions -- declaration merging needs an interface
   interface PluginRequests {
-    'usage.overview': { input: { range: UsageRange }; output: OverviewReport }
+    'usage.overview': { input: { range: UsageRange; forceSync?: boolean }; output: OverviewReport }
   }
 }
