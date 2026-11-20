@@ -1,6 +1,6 @@
 # OMP Stats · Orca Sidebar Plugin
 
-[![Orca Plugin](https://img.shields.io/badge/Orca%20Plugin-v0.1.0-5ad8e6.svg)](#)
+[![Orca Plugin](https://img.shields.io/badge/Orca%20Plugin-v0.3.0-5ad8e6.svg)](#)
 [![Execution](https://img.shields.io/badge/Execution-trusted--worker-ed4abf.svg)](#)
 [![Engines](https://img.shields.io/badge/Orca-%3E%3D1.4.248-3ecf8e.svg)](#)
 [![License](https://img.shields.io/badge/License-MIT-3ecf8e.svg)](./LICENSE)
@@ -84,6 +84,14 @@ Mirrors `http://127.0.0.1:59127/#/models`:
     - **Solid Line (Left Y-axis)**: Tokens/s throughput curve using the model's theme color.
     - **Dashed Line (Right Y-axis)**: TTFT latency curve in seconds.
     - **Interactive Tooltips**: Hover over data points to inspect exact throughput, latency, and request counts.
+
+---
+
+### 3. Trends Tab
+
+- **Independent chart heights (v0.3.0)**: Drag the bottom handle of any Trends card vertically to resize its chart. Each metric remembers its own height across refreshes, time-range changes, tab switches, and reloads.
+- **Responsive charts**: Height preferences scale with panel width; axes, labels, curves, stacked areas, and synchronized selections redraw without stretching text.
+- **Keyboard resizing**: Focus a resize handle and press `↑` / `↓` to adjust, or `Home` to restore the default height. Minimum and maximum heights prevent collapsed or oversized charts.
 
 ---
 
